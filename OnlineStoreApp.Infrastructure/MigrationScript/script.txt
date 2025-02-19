@@ -1,0 +1,2 @@
+﻿dotnet ef Migrations add {migrationName} --project OnlineStoreApp.Infrastructure
+dotnet ef database update --project OnlineStoreApp.Infrastructure
