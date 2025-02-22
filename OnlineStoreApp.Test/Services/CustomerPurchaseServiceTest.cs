@@ -1,6 +1,6 @@
 ﻿using Moq;
-using OnlineStoreApp.Application.Application.DTO.Products;
 using OnlineStoreApp.Application.DTO.CustomerPurchases;
+using OnlineStoreApp.Application.DTO.Products;
 using OnlineStoreApp.Application.Interface.Repository;
 using OnlineStoreApp.Application.Services;
 using OnlineStoreApp.Domain.Entities;
@@ -10,12 +10,14 @@ namespace OnlineStoreApp.Test.Services;
 public class CustomerPurchaseServiceTests
 {
     private readonly Mock<ICustomerPurchaseRepository> _mockRepository;
+    private readonly Mock<ICustomerRepository> _mockCustomerRepository;
     private readonly CustomerPurchaseService _service;
 
     public CustomerPurchaseServiceTests()
     {
         _mockRepository = new Mock<ICustomerPurchaseRepository>();
-        _service = new CustomerPurchaseService(_mockRepository.Object);
+        _mockCustomerRepository = new Mock<ICustomerRepository>();
+        _service = new CustomerPurchaseService(_mockRepository.Object,  _mockCustomerRepository.Object);
     }
 
     [Fact]
@@ -24,10 +26,10 @@ public class CustomerPurchaseServiceTests
         var dto = new CustomerPurchaseDto
         {
             CustomerId = Guid.NewGuid(),
-            Products = new List<ProductInfoDto>
+            Products = new List<GetProductDto>
             {
-                new ProductInfoDto { Name = "Item1", Price = 10 },
-                new ProductInfoDto { Name = "Item2", Price = 15 }
+                new GetProductDto { Id = Guid.NewGuid(), Name = "Item1", Description = "Description", Price = 10, DateAdded = DateTime.Now },
+                new GetProductDto { Id = Guid.NewGuid(), Name = "Item2", Description = "Description", Price = 15, DateAdded = DateTime.Now }
             },
             Total = 25
         };
@@ -68,9 +70,9 @@ public class CustomerPurchaseServiceTests
         {
             Id = id,
             CustomerId = Guid.NewGuid(),
-            Products = JsonSerializer.Serialize(new List<ProductInfoDto>
+            Products = JsonSerializer.Serialize(new List<GetProductDto>
             {
-                new ProductInfoDto { Name = "Item1", Price = 10 }
+                new GetProductDto { Id = Guid.NewGuid(), Name = "Item1", Description = "Item 1 Description", Price = 10, DateAdded = DateTime.Now }
             }),
             Total = 10,
             PurchaseDate = DateTime.Now,

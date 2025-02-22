@@ -1,6 +1,6 @@
-﻿using OnlineStoreApp.Application.Application.DTO.Helper.Pagination.Response;
-using OnlineStoreApp.Application.Application.DTO.Products;
-using OnlineStoreApp.Application.DTO.CustomerPurchases;
+﻿using OnlineStoreApp.Application.DTO.CustomerPurchases;
+using OnlineStoreApp.Application.DTO.Customers;
+using OnlineStoreApp.Application.DTO.Products;
 using OnlineStoreApp.Application.Interface.Repository;
 using OnlineStoreApp.Application.Interface.Services;
 using OnlineStoreApp.Domain.Entities;
@@ -11,9 +11,12 @@ namespace OnlineStoreApp.Application.Services;
 public class CustomerPurchaseService : ICustomerPurchaseService
 {
     private ICustomerPurchaseRepository _customerPurchaseRepository;
-    public CustomerPurchaseService(ICustomerPurchaseRepository customerPurchaseRepository)
+    private ICustomerRepository _customerRepository;
+    public CustomerPurchaseService(ICustomerPurchaseRepository customerPurchaseRepository,
+                                   ICustomerRepository customerRepository)
     {
         _customerPurchaseRepository = customerPurchaseRepository;
+        _customerRepository = customerRepository;
     }
     public async Task<Guid> CreateCustomerPurchase(CustomerPurchaseDto dto)
     {
@@ -55,21 +58,35 @@ public class CustomerPurchaseService : ICustomerPurchaseService
         {
             var purchase = await _customerPurchaseRepository.FindActiveRecordByIdAsync(id);
 
-            var productInfo = new List<ProductInfoDto>();
+            var productInfo = new List<GetProductDto>();
             if (!string.IsNullOrEmpty(purchase.Products))
             {
-                productInfo = JsonSerializer.Deserialize<List<ProductInfoDto>>(purchase.Products);
+                productInfo = JsonSerializer.Deserialize<List<GetProductDto>>(purchase.Products);
             }
 
             var getCustomerPurchaseDto = new GetCustomerPurchaseDto
             {
                 Id = purchase.Id,
-                CustomerId = purchase.CustomerId,
                 Products = productInfo,
                 Total = purchase.Total,
                 PurchaseDate = purchase.PurchaseDate,
                 ReceiptReference = purchase.ReceiptReference
             };
+
+            var customer = await _customerRepository.FindActiveRecordByIdAsync(purchase.CustomerId);
+
+            if (customer != null)
+            {
+                getCustomerPurchaseDto.Customer = new GetCustomerDto
+                {
+                    Id = customer.Id,
+                    FirstName = customer.FirstName,
+                    LastName = customer.LastName,
+                    Email = customer.Email,
+                    Phone = customer.Phone,
+                    DateAdded = customer.DateAdded
+                };
+            }
 
             return getCustomerPurchaseDto;
         }
@@ -89,7 +106,7 @@ public class CustomerPurchaseService : ICustomerPurchaseService
             {
                 Id = purchase.Id,
                 CustomerId = purchase.CustomerId,
-                Products = !string.IsNullOrEmpty(purchase.Products) ? JsonSerializer.Deserialize<List<ProductInfoDto>>(purchase.Products) : new List<ProductInfoDto>(),
+                Products = !string.IsNullOrEmpty(purchase.Products) ? JsonSerializer.Deserialize<List<GetProductDto>>(purchase.Products) : new List<GetProductDto>(),
                 Total = purchase.Total,
                 PurchaseDate = purchase.PurchaseDate,
                 ReceiptReference = purchase.ReceiptReference
