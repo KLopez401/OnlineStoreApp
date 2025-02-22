@@ -36,7 +36,7 @@ public class CustomerPurchaseService : ICustomerPurchaseService
                 Id = id,
                 CustomerId = dto.CustomerId,
                 Products = jsonString,
-                Total = dto.Total,
+                Total = dto.Products.Sum(x => x.Price),
                 PurchaseDate = DateTime.Now,
                 ReceiptReference = id.ToString().Substring(id.ToString().Length - 7),
                 IsDeleted = false
